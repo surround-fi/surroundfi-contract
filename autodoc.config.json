@@ -1,6 +1,6 @@
 {
-  "name": "marginfi-v2",
-  "repositoryUrl": "https://github.com/mrgnlabs/marginfi-v2",
+  "name": "surroundfi",
+  "repositoryUrl": "https://github.com/surround-fi/smart-contracts",
   "root": ".",
   "output": "./.autodoc",
   "llms": [

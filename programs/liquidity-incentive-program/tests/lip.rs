@@ -8,7 +8,7 @@ use fixtures::{
     utils::lip::get_reward_vault_address,
 };
 use liquidity_incentive_program::errors::LIPError;
-use marginfi::assert_eq_with_tolerance;
+use surroundfi::assert_eq_with_tolerance;
 use solana_program_test::tokio;
 
 #[tokio::test]
@@ -18,7 +18,7 @@ async fn campaign_no_yield() -> Result<()> {
 
     // Setup sample bank
     let usdc_bank = test_f
-        .marginfi_group
+        .surroundfi_group
         .try_lending_pool_add_bank(&test_f.usdc_mint, *DEFAULT_USDC_TEST_BANK_CONFIG)
         .await?;
 
@@ -109,12 +109,12 @@ async fn campaign_mixed_yield() -> Result<()> {
 
     // Setup sample bank
     let usdc_bank = test_f
-        .marginfi_group
+        .surroundfi_group
         .try_lending_pool_add_bank(&test_f.usdc_mint, *DEFAULT_USDC_TEST_BANK_CONFIG)
         .await?;
 
     let sol_bank = test_f
-        .marginfi_group
+        .surroundfi_group
         .try_lending_pool_add_bank(&test_f.sol_mint, *DEFAULT_SOL_TEST_BANK_CONFIG)
         .await?;
 
@@ -145,7 +145,7 @@ async fn campaign_mixed_yield() -> Result<()> {
         .try_create_deposit(deposit_funding_account.key, native!(1000, "USDC"))
         .await?;
 
-    let borrower = test_f.create_marginfi_account().await;
+    let borrower = test_f.create_surroundfi_account().await;
 
     let sol_funding_account = test_f.sol_mint.create_token_account_and_mint_to(1000).await;
 
@@ -202,12 +202,12 @@ async fn campaign_max_yield() -> Result<()> {
 
     // Setup sample bank
     let usdc_bank = test_f
-        .marginfi_group
+        .surroundfi_group
         .try_lending_pool_add_bank(&test_f.usdc_mint, *DEFAULT_USDC_TEST_BANK_CONFIG)
         .await?;
 
     let sol_bank = test_f
-        .marginfi_group
+        .surroundfi_group
         .try_lending_pool_add_bank(&test_f.sol_mint, *DEFAULT_SOL_TEST_BANK_CONFIG)
         .await?;
 
@@ -238,7 +238,7 @@ async fn campaign_max_yield() -> Result<()> {
         .try_create_deposit(deposit_funding_account.key, native!(1000, "USDC"))
         .await?;
 
-    let borrower = test_f.create_marginfi_account().await;
+    let borrower = test_f.create_surroundfi_account().await;
 
     let sol_funding_account = test_f.sol_mint.create_token_account_and_mint_to(1000).await;
 
@@ -290,7 +290,7 @@ async fn campaign_neg_yield() -> Result<()> {
 
     // Setup sample bank
     let usdc_bank = test_f
-        .marginfi_group
+        .surroundfi_group
         .try_lending_pool_add_bank(&test_f.usdc_mint, *DEFAULT_USDC_TEST_BANK_CONFIG)
         .await?;
 

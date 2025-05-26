@@ -45,11 +45,11 @@ impl LipCampaignFixture {
                 funding_account,
                 temp_token_account: temp_token_account_key.pubkey(),
                 asset_mint: bank.mint,
-                marginfi_group: bank.group,
-                marginfi_bank: self.bank_f.key,
-                marginfi_account: get_marginfi_account_address(deposit_key.pubkey()).0,
-                marginfi_bank_vault: bank.liquidity_vault,
-                marginfi_program: marginfi::id(),
+                surroundfi_group: bank.group,
+                surroundfi_bank: self.bank_f.key,
+                surroundfi_account: get_surroundfi_account_address(deposit_key.pubkey()).0,
+                surroundfi_bank_vault: bank.liquidity_vault,
+                surroundfi_program: surroundfi::id(),
                 token_program: self.bank_f.get_token_program(),
                 rent: anchor_lang::solana_program::sysvar::rent::id(),
                 system_program: solana_program::system_program::id(),
@@ -99,15 +99,15 @@ impl LipCampaignFixture {
                 temp_token_account_authority: get_temp_token_account_authority(deposit_pk).0,
                 destination_account: destination_account_address,
                 asset_mint: bank.mint,
-                marginfi_account: get_marginfi_account_address(deposit_pk).0,
-                marginfi_group: bank.group,
-                marginfi_bank: self.bank_f.key,
-                marginfi_bank_vault: bank.liquidity_vault,
-                marginfi_bank_vault_authority: self
+                surroundfi_account: get_surroundfi_account_address(deposit_pk).0,
+                surroundfi_group: bank.group,
+                surroundfi_bank: self.bank_f.key,
+                surroundfi_bank_vault: bank.liquidity_vault,
+                surroundfi_bank_vault_authority: self
                     .bank_f
-                    .get_vault_authority(marginfi::state::marginfi_group::BankVaultType::Liquidity)
+                    .get_vault_authority(surroundfi::state::surroundfi_group::BankVaultType::Liquidity)
                     .0,
-                marginfi_program: marginfi::id(),
+                surroundfi_program: surroundfi::id(),
                 token_program: self.bank_f.get_token_program(),
                 system_program: solana_program::system_program::id(),
             }

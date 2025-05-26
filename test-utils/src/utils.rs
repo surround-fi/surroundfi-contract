@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_lang_29::Discriminator;
 use anchor_spl::token_2022::spl_token_2022::extension::transfer_fee::MAX_FEE_BASIS_POINTS;
-use marginfi::constants::PYTH_ID;
-use marginfi::constants::SWITCHBOARD_PULL_ID;
+use surroundfi::constants::PYTH_ID;
+use surroundfi::constants::SWITCHBOARD_PULL_ID;
 use pyth_sdk_solana::state::{
     AccountType, PriceInfo, PriceStatus, Rational, SolanaPriceAccount, MAGIC, VERSION_2,
 };
@@ -47,7 +47,7 @@ where
     T: ToAccountMetas,
 {
     Instruction {
-        program_id: marginfi::id(),
+        program_id: surroundfi::id(),
         accounts: accounts.to_account_metas(Some(true)),
         data: ix_data,
     }
@@ -624,11 +624,11 @@ pub fn clone_keypair(keypair: &Keypair) -> Keypair {
 pub fn get_emissions_authority_address(bank_pk: Pubkey, emissions_mint: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            marginfi::constants::EMISSIONS_AUTH_SEED.as_bytes(),
+            surroundfi::constants::EMISSIONS_AUTH_SEED.as_bytes(),
             bank_pk.as_ref(),
             emissions_mint.as_ref(),
         ],
-        &marginfi::id(),
+        &surroundfi::id(),
     )
 }
 
@@ -638,11 +638,11 @@ pub fn get_emissions_token_account_address(
 ) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            marginfi::constants::EMISSIONS_TOKEN_ACCOUNT_SEED.as_bytes(),
+            surroundfi::constants::EMISSIONS_TOKEN_ACCOUNT_SEED.as_bytes(),
             bank_pk.as_ref(),
             emissions_mint.as_ref(),
         ],
-        &marginfi::id(),
+        &surroundfi::id(),
     )
 }
 
@@ -701,10 +701,10 @@ pub mod lip {
         )
     }
 
-    pub fn get_marginfi_account_address(deposit_key: Pubkey) -> (Pubkey, u8) {
+    pub fn get_surroundfi_account_address(deposit_key: Pubkey) -> (Pubkey, u8) {
         Pubkey::find_program_address(
             &[
-                liquidity_incentive_program::constants::MARGINFI_ACCOUNT_SEED.as_bytes(),
+                liquidity_incentive_program::constants::SURROUNDFI_ACCOUNT_SEED.as_bytes(),
                 deposit_key.as_ref(),
             ],
             &liquidity_incentive_program::id(),

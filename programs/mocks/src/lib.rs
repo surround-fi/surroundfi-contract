@@ -10,7 +10,7 @@ use crate::instructions::*;
 // use crate::state::*;
 // use errors::*;
 
-declare_id!("5XaaR94jBubdbrRrNW7DtRvZeWvLhSHkEGU3jHTEXV3C");
+declare_id!("3Bb7JMJEDzpmksZ2MKivFvVpUPf7J931kKMLUbDtGgh5");
 
 #[program]
 pub mod mocks {

@@ -1,6 +1,6 @@
-use super::marginfi_account::MarginfiAccountFixture;
+use super::surroundfi_account::SurroundfiAccountFixture;
 use crate::{
-    bank::BankFixture, marginfi_group::*, native, spl::*, transfer_hook::TEST_HOOK_ID, utils::*,
+    bank::BankFixture, surroundfi_group::*, native, spl::*, transfer_hook::TEST_HOOK_ID, utils::*,
 };
 
 use anchor_lang::prelude::*;
@@ -11,10 +11,10 @@ use solana_sdk::{account::AccountSharedData, entrypoint::ProgramResult};
 
 use fixed_macro::types::I80F48;
 use lazy_static::lazy_static;
-use marginfi::{
+use surroundfi::{
     constants::MAX_ORACLE_KEYS,
     state::{
-        marginfi_group::{BankConfig, BankOperationalState, InterestRateConfig, RiskTier},
+        surroundfi_group::{BankConfig, BankOperationalState, InterestRateConfig, RiskTier},
         price::OracleSetup,
     },
 };
@@ -210,7 +210,7 @@ impl Default for BankMint {
 
 pub struct TestFixture {
     pub context: Rc<RefCell<ProgramTestContext>>,
-    pub marginfi_group: MarginfiGroupFixture,
+    pub surroundfi_group: SurroundfiGroupFixture,
     pub banks: HashMap<BankMint, BankFixture>,
     pub usdc_mint: MintFixture,
     pub sol_mint: MintFixture,
@@ -424,8 +424,8 @@ pub const T22_WITH_FEE_MINT_DECIMALS: u8 = 6;
 pub const SOL_MINT_DECIMALS: u8 = 9;
 pub const MNDE_MINT_DECIMALS: u8 = 9;
 
-pub fn marginfi_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    marginfi::entry(program_id, unsafe { core::mem::transmute(accounts) }, data)
+pub fn surroundfi_entry(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
+    surroundfi::entry(program_id, unsafe { core::mem::transmute(accounts) }, data)
 }
 
 #[cfg(feature = "lip")]
@@ -451,7 +451,7 @@ impl TestFixture {
         program.deactivate_feature(mem_map_not_copy_feature_gate);
 
         program.prefer_bpf(true);
-        program.add_program("marginfi", marginfi::ID, None);
+        program.add_program("surroundfi", surroundfi::ID, None);
         program.add_program("test_transfer_hook", TEST_HOOK_ID, None);
         #[cfg(feature = "lip")]
         program.add_program(
@@ -632,7 +632,7 @@ impl TestFixture {
         )
         .await;
 
-        let tester_group = MarginfiGroupFixture::new(Rc::clone(&context)).await;
+        let tester_group = SurroundfiGroupFixture::new(Rc::clone(&context)).await;
 
         tester_group
             .set_protocol_fees_flag(test_settings.clone().unwrap_or_default().protocol_fees)
@@ -715,7 +715,7 @@ impl TestFixture {
 
         TestFixture {
             context: Rc::clone(&context),
-            marginfi_group: tester_group,
+            surroundfi_group: tester_group,
             banks,
             usdc_mint: usdc_mint_f,
             sol_mint: sol_mint_f,
@@ -726,8 +726,8 @@ impl TestFixture {
         }
     }
 
-    pub async fn create_marginfi_account(&self) -> MarginfiAccountFixture {
-        MarginfiAccountFixture::new(Rc::clone(&self.context), &self.marginfi_group.key).await
+    pub async fn create_surroundfi_account(&self) -> SurroundfiAccountFixture {
+        SurroundfiAccountFixture::new(Rc::clone(&self.context), &self.surroundfi_group.key).await
     }
 
     pub async fn try_load(

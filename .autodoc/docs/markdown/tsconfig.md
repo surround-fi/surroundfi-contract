@@ -1,4 +1,4 @@
-[View code on GitHub](https://github.com/mrgnlabs/marginfi-v2/tsconfig.json)
+[View code on GitHub](https://github.com/surround-fi/smart-contracts/tsconfig.json)
 
 This code is a configuration file for the TypeScript compiler. It sets various options for the compiler to use when compiling TypeScript code into JavaScript. 
 
@@ -23,10 +23,10 @@ Example usage:
 If a TypeScript file is added to the project, the TypeScript compiler will use this configuration file to determine how to compile the file. For example, if a file called "example.ts" is added to the project, running the command "tsc example.ts" will compile the file into JavaScript using the options specified in this configuration file.
 ## Questions: 
  1. **What is the purpose of this code?**\
-A smart developer might wonder what this code is used for and where it is being implemented within the `marginfi-v2` project.
+A smart developer might wonder what this code is used for and where it is being implemented within the `surroundfi` project.
 
 2. **What are the specific compiler options being set?**\
 A smart developer might want to know what each of the compiler options being set in this code block means and how they affect the project.
 
 3. **Why are the "mocha" and "chai" types being included?**\
-A smart developer might question why the "mocha" and "chai" types are being included in the `types` array and what their significance is in the `marginfi-v2` project.
+A smart developer might question why the "mocha" and "chai" types are being included in the `types` array and what their significance is in the `surroundfi` project.

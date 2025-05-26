@@ -41,8 +41,8 @@ pretty_assertions = "1.2.1"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 
-[dependencies.marginfi]
-path = "../programs/marginfi"
+[dependencies.surroundfi]
+path = "../programs/surroundfi"
 features = ["test-bpf"]
 
 [dependencies.transfer_hook]

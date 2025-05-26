@@ -36,12 +36,12 @@ lazy_static! {
 }
 
 lazy_static! {
-    pub static ref METRIC_MARGINFI_GROUP_SCHEMA: TableSchema = TableSchema::new(vec![
+    pub static ref METRIC_SURROUNDFI_GROUP_SCHEMA: TableSchema = TableSchema::new(vec![
         TableFieldSchema::string("id"),
         TableFieldSchema::timestamp("created_at"),
         TableFieldSchema::timestamp("timestamp"),
         TableFieldSchema::string("pubkey"),
-        TableFieldSchema::integer("marginfi_accounts_count"),
+        TableFieldSchema::integer("surroundfi_accounts_count"),
         TableFieldSchema::integer("banks_count"),
         TableFieldSchema::integer("mints_count"),
         TableFieldSchema::float("total_assets_in_usd"),
@@ -52,7 +52,7 @@ lazy_static! {
         TableFieldSchema::timestamp("created_at"),
         TableFieldSchema::timestamp("timestamp"),
         TableFieldSchema::string("pubkey"),
-        TableFieldSchema::string("marginfi_group"),
+        TableFieldSchema::string("surroundfi_group"),
         TableFieldSchema::string("mint"),
         TableFieldSchema::float("usd_price"),
         TableFieldSchema::string("operational_state"),
@@ -78,12 +78,12 @@ lazy_static! {
         TableFieldSchema::float("insurance_vault_balance"),
         TableFieldSchema::float("fee_vault_balance"),
     ]);
-    pub static ref METRIC_MARGINFI_ACCOUNT_SCHEMA: TableSchema = TableSchema::new(vec![
+    pub static ref METRIC_SURROUNDFI_ACCOUNT_SCHEMA: TableSchema = TableSchema::new(vec![
         TableFieldSchema::string("id"),
         TableFieldSchema::timestamp("created_at"),
         TableFieldSchema::timestamp("timestamp"),
         TableFieldSchema::string("pubkey"),
-        TableFieldSchema::string("marginfi_group"),
+        TableFieldSchema::string("surroundfi_group"),
         TableFieldSchema::string("owner"),
         TableFieldSchema::float("total_assets_in_usd"),
         TableFieldSchema::float("total_liabilities_in_usd"),

@@ -4,11 +4,11 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
 use fixed::types::I80F48;
-use marginfi::{program::Marginfi, state::marginfi_group::Bank};
+use surroundfi::{program::Surroundfi, state::surroundfi_group::Bank};
 
 use crate::{
     constants::{
-        CAMPAIGN_AUTH_SEED, CAMPAIGN_SEED, DEPOSIT_MFI_AUTH_SIGNER_SEED, MARGINFI_ACCOUNT_SEED,
+        CAMPAIGN_AUTH_SEED, CAMPAIGN_SEED, DEPOSIT_MFI_AUTH_SIGNER_SEED, SURROUNDFI_ACCOUNT_SEED,
         TEMP_TOKEN_ACCOUNT_AUTH_SEED,
     },
     errors::LIPError,
@@ -49,26 +49,26 @@ pub fn process<'info>(ctx: Context<'_, '_, '_, 'info, EndDeposit<'info>>) -> Res
         &[ctx.bumps.mfi_pda_signer],
     ]];
     let mut cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.marginfi_program.to_account_info(),
-        marginfi::cpi::accounts::LendingAccountWithdraw {
-            group: ctx.accounts.marginfi_group.to_account_info(),
-            marginfi_account: ctx.accounts.marginfi_account.to_account_info(),
+        ctx.accounts.surroundfi_program.to_account_info(),
+        surroundfi::cpi::accounts::LendingAccountWithdraw {
+            group: ctx.accounts.surroundfi_group.to_account_info(),
+            surroundfi_account: ctx.accounts.surroundfi_account.to_account_info(),
             authority: ctx.accounts.mfi_pda_signer.to_account_info(),
-            bank: ctx.accounts.marginfi_bank.to_account_info(),
+            bank: ctx.accounts.surroundfi_bank.to_account_info(),
             destination_token_account: ctx.accounts.temp_token_account.to_account_info(),
-            liquidity_vault: ctx.accounts.marginfi_bank_vault.to_account_info(),
+            liquidity_vault: ctx.accounts.surroundfi_bank_vault.to_account_info(),
             bank_liquidity_vault_authority: ctx
                 .accounts
-                .marginfi_bank_vault_authority
+                .surroundfi_bank_vault_authority
                 .to_account_info(),
             token_program: ctx.accounts.token_program.to_account_info(),
         },
         signer_seeds,
     );
     cpi_ctx.remaining_accounts = ctx.remaining_accounts.to_vec();
-    marginfi::cpi::lending_account_withdraw(cpi_ctx, 0, Some(true))?;
+    surroundfi::cpi::lending_account_withdraw(cpi_ctx, 0, Some(true))?;
 
-    // Redeem the shares with marginfi
+    // Redeem the shares with surroundfi
     ctx.accounts.temp_token_account.reload()?;
 
     // Calulate additional rewards that need to be payed out, based on guaranteed yield.
@@ -234,43 +234,43 @@ pub struct EndDeposit<'info> {
     /// CHECK: Asserted by token transfer
     pub destination_account: AccountInfo<'info>,
 
-    #[account(address = marginfi_bank.load()?.mint)]
+    #[account(address = surroundfi_bank.load()?.mint)]
     /// CHECK: Asserted by constraint
     pub asset_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
         mut,
         seeds = [
-            MARGINFI_ACCOUNT_SEED.as_bytes(),
+            SURROUNDFI_ACCOUNT_SEED.as_bytes(),
             deposit.key().as_ref(),
         ],
         bump,
     )]
     /// CHECK: Asserted by PDA derivation
-    pub marginfi_account: AccountInfo<'info>,
+    pub surroundfi_account: AccountInfo<'info>,
 
     /// CHECK: Asserted by CPI call
-    pub marginfi_group: AccountInfo<'info>,
+    pub surroundfi_group: AccountInfo<'info>,
 
     #[account(
         mut,
-        address = campaign.marginfi_bank_pk,
+        address = campaign.surroundfi_bank_pk,
     )]
-    pub marginfi_bank: AccountLoader<'info, Bank>,
+    pub surroundfi_bank: AccountLoader<'info, Bank>,
 
     /// CHECK: Asserted by CPI call
     #[account(mut)]
-    pub marginfi_bank_vault: AccountInfo<'info>,
+    pub surroundfi_bank_vault: AccountInfo<'info>,
 
     // /// CHECK: Asserted by CPI call
     // #[account()]
     // pub bank_mint: InterfaceAccount<'info, Mint>,
     /// CHECK: Asserted by CPI call
     #[account(mut)]
-    pub marginfi_bank_vault_authority: AccountInfo<'info>,
+    pub surroundfi_bank_vault_authority: AccountInfo<'info>,
 
     /// CHECK: Asserted by CPI call
-    pub marginfi_program: Program<'info, Marginfi>,
+    pub surroundfi_program: Program<'info, Surroundfi>,
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }

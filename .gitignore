@@ -30,5 +30,8 @@ test-ledger/
 
 # Allow specific json files
 !tests/fixtures/**/*.json
-!programs/marginfi/tests/fixtures/**/*.json
+!programs/surroundfi/tests/fixtures/**/*.json
 !.vscode/tasks.json
+
+# pnpm
+.pnpm-store

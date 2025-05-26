@@ -1,8 +1,8 @@
 # Important Notice
-**DO NOT CREATE A GITHUB ISSUE** to report a security problem. Instead, please send an email to security@mrgn.group with a detailed description of the attack vector and security risk you have identified.
+**DO NOT CREATE A GITHUB ISSUE** to report a security problem. Instead, please send an email to security@surroundfi.group with a detailed description of the attack vector and security risk you have identified.
 ​
 # Bug Bounty Overview
-marginfi offers bug bounties for marginfi's on-chain program code. UI-only bugs are omitted.
+surroundfi offers bug bounties for surroundfi's on-chain program code. UI-only bugs are omitted.
 ​
 |Severity|Bounty|
 |-----------|-------------|
@@ -15,7 +15,7 @@ The severity scale is based on [Immunefi's classification system](https://immune
 Note that these are simply guidelines for the severity of the bugs. Each bug bounty submission will be evaluated on a case-by-case basis.
 ​
 ## Submission
-Please email security@mrgn.group with a detailed description of the attack vector.
+Please email security@surroundfi.group with a detailed description of the attack vector.
 ​
 For critical- and high-severity bugs, we require a proof of concept reproducible on a privately deployed mainnet contract (**NOT** our official deployment).
 ​
@@ -34,5 +34,5 @@ A number of attacks are out of scope for the bug bounty, including but not limit
 6. Third party, off-chain bot errors (for instance bugs with an arbitrage bot running on the smart contracts).
 7. Best practice critiques.
 8. Sybil attacks.
-9. Attempted phishing or other social engineering attacks involving marginfi contributors or users
+9. Attempted phishing or other social engineering attacks involving surroundfi contributors or users
 10. Denial of service, or automated testing of services that generate significant traffic.

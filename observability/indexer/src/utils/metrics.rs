@@ -1,4 +1,4 @@
-use super::marginfi_account_dup::RiskEngine2;
+use super::surroundfi_account_dup::RiskEngine2;
 use crate::utils::big_query::DATE_FORMAT_STR;
 use crate::utils::snapshot::{BankAccounts, OracleData, Snapshot};
 use anyhow::anyhow;
@@ -6,25 +6,25 @@ use chrono::{NaiveDateTime, Utc};
 use fixed::types::I80F48;
 use fixed_macro::types::I80F48;
 use itertools::Itertools;
-use marginfi::prelude::MarginfiGroup;
-use marginfi::state::marginfi_account::{
-    calc_value, MarginfiAccount, RequirementType, RiskRequirementType,
+use surroundfi::prelude::SurroundfiGroup;
+use surroundfi::state::surroundfi_account::{
+    calc_value, SurroundfiAccount, RequirementType, RiskRequirementType,
 };
-use marginfi::state::marginfi_group::BankOperationalState;
-use marginfi::state::price::{OraclePriceFeedAdapter, OraclePriceType, PriceBias};
-use marginfi::{constants::ZERO_AMOUNT_THRESHOLD, state::marginfi_group::ComputedInterestRates};
+use surroundfi::state::surroundfi_group::BankOperationalState;
+use surroundfi::state::price::{OraclePriceFeedAdapter, OraclePriceType, PriceBias};
+use surroundfi::{constants::ZERO_AMOUNT_THRESHOLD, state::surroundfi_group::ComputedInterestRates};
 use serde::Serialize;
 use solana_sdk::pubkey::Pubkey;
 use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize)]
-pub struct MarginfiGroupMetricsRow {
+pub struct SurroundfiGroupMetricsRow {
     pub id: String,
     pub created_at: String,
     pub timestamp: String,
     pub pubkey: String,
-    pub marginfi_accounts_count: u32,
+    pub surroundfi_accounts_count: u32,
     pub banks_count: u32,
     pub mints_count: u32,
     pub total_assets_in_usd: f64,
@@ -32,31 +32,31 @@ pub struct MarginfiGroupMetricsRow {
 }
 
 #[derive(Debug)]
-pub struct MarginfiGroupMetrics {
+pub struct SurroundfiGroupMetrics {
     pub timestamp: i64,
     pub pubkey: Pubkey,
-    pub marginfi_accounts_count: u32,
+    pub surroundfi_accounts_count: u32,
     pub banks_count: u32,
     pub mints_count: u32,
     pub total_assets_in_usd: f64,
     pub total_liabilities_in_usd: f64,
 }
 
-impl MarginfiGroupMetrics {
+impl SurroundfiGroupMetrics {
     pub fn new(
         timestamp: i64,
-        marginfi_group_pk: &Pubkey,
-        _marginfi_group: &MarginfiGroup,
+        surroundfi_group_pk: &Pubkey,
+        _surroundfi_group: &SurroundfiGroup,
         snapshot: &Snapshot,
     ) -> anyhow::Result<Self> {
         let group_banks_iter = snapshot
             .banks
             .iter()
-            .filter(|(_, bank_accounts)| bank_accounts.bank.group.eq(marginfi_group_pk));
-        let group_marginfi_accounts_iter = snapshot
-            .marginfi_accounts
+            .filter(|(_, bank_accounts)| bank_accounts.bank.group.eq(surroundfi_group_pk));
+        let group_surroundfi_accounts_iter = snapshot
+            .surroundfi_accounts
             .iter()
-            .filter(|(_, marginfi_account)| marginfi_account.group.eq(marginfi_group_pk));
+            .filter(|(_, surroundfi_account)| surroundfi_account.group.eq(surroundfi_group_pk));
 
         let (
             total_assets_usd,
@@ -135,8 +135,8 @@ impl MarginfiGroupMetrics {
 
         Ok(Self {
             timestamp,
-            pubkey: *marginfi_group_pk,
-            marginfi_accounts_count: group_marginfi_accounts_iter.count() as u32,
+            pubkey: *surroundfi_group_pk,
+            surroundfi_accounts_count: group_surroundfi_accounts_iter.count() as u32,
             banks_count: group_banks_iter.clone().count() as u32,
             mints_count: group_banks_iter
                 .unique_by(|(_, bank_accounts)| bank_accounts.bank.mint)
@@ -147,8 +147,8 @@ impl MarginfiGroupMetrics {
         })
     }
 
-    pub fn to_row(&self) -> MarginfiGroupMetricsRow {
-        MarginfiGroupMetricsRow {
+    pub fn to_row(&self) -> SurroundfiGroupMetricsRow {
+        SurroundfiGroupMetricsRow {
             id: Uuid::new_v4().to_string(),
             created_at: Utc::now().format(DATE_FORMAT_STR).to_string(),
             timestamp: NaiveDateTime::from_timestamp_opt(self.timestamp, 0)
@@ -156,7 +156,7 @@ impl MarginfiGroupMetrics {
                 .format(DATE_FORMAT_STR)
                 .to_string(),
             pubkey: self.pubkey.to_string(),
-            marginfi_accounts_count: self.marginfi_accounts_count,
+            surroundfi_accounts_count: self.surroundfi_accounts_count,
             banks_count: self.banks_count,
             mints_count: self.mints_count,
             total_assets_in_usd: self.total_assets_in_usd,
@@ -171,7 +171,7 @@ pub struct LendingPoolBankMetricsRow {
     pub created_at: String,
     pub timestamp: String,
     pub pubkey: String,
-    pub marginfi_group: String,
+    pub surroundfi_group: String,
     pub mint: String,
     pub usd_price: f64,
     pub operational_state: String,
@@ -202,7 +202,7 @@ pub struct LendingPoolBankMetricsRow {
 pub struct LendingPoolBankMetrics {
     pub timestamp: i64,
     pub pubkey: Pubkey,
-    pub marginfi_group: Pubkey,
+    pub surroundfi_group: Pubkey,
     pub mint: Pubkey,
     pub usd_price: f64,
     pub operational_state: BankOperationalState,
@@ -290,7 +290,7 @@ impl LendingPoolBankMetrics {
         .to_num::<f64>();
 
         let lenders_count = snapshot
-            .marginfi_accounts
+            .surroundfi_accounts
             .iter()
             .filter(|(_, account)| {
                 account.lending_account.balances.iter().any(|a| {
@@ -301,7 +301,7 @@ impl LendingPoolBankMetrics {
             })
             .count() as u32;
         let borrowers_count = snapshot
-            .marginfi_accounts
+            .surroundfi_accounts
             .iter()
             .filter(|(_, account)| {
                 account.lending_account.balances.iter().any(|a| {
@@ -320,7 +320,7 @@ impl LendingPoolBankMetrics {
             I80F48::ZERO
         };
         let group = snapshot
-            .marginfi_groups
+            .surroundfi_groups
             .get(&bank_accounts.bank.group)
             .ok_or_else(|| {
                 anyhow!(
@@ -341,14 +341,14 @@ impl LendingPoolBankMetrics {
             group_fee_apr,
             insurance_fee_apr,
             protocol_fee_apr: _,
-        }: marginfi::state::marginfi_group::ComputedInterestRates = ir_calc
+        }: surroundfi::state::surroundfi_group::ComputedInterestRates = ir_calc
             .calc_interest_rate(utilization_rate)
             .ok_or_else(|| anyhow!("Bad math during IR calcs"))?;
 
         Ok(Self {
             timestamp,
             pubkey: *bank_pk,
-            marginfi_group: bank_accounts.bank.group,
+            surroundfi_group: bank_accounts.bank.group,
             mint: bank_accounts.bank.mint,
             usd_price: price.to_num::<f64>(),
             operational_state: bank_accounts.bank.config.operational_state,
@@ -392,7 +392,7 @@ impl LendingPoolBankMetrics {
                 .format(DATE_FORMAT_STR)
                 .to_string(),
             pubkey: self.pubkey.to_string(),
-            marginfi_group: self.marginfi_group.to_string(),
+            surroundfi_group: self.surroundfi_group.to_string(),
             mint: self.mint.to_string(),
             usd_price: self.usd_price,
             operational_state: self.operational_state.to_string(),
@@ -422,12 +422,12 @@ impl LendingPoolBankMetrics {
 }
 
 #[derive(Debug, Serialize)]
-pub struct MarginfiAccountMetricsRow {
+pub struct SurroundfiAccountMetricsRow {
     pub id: String,
     pub created_at: String,
     pub timestamp: String,
     pub pubkey: String,
-    pub marginfi_group: String,
+    pub surroundfi_group: String,
     pub owner: String,
     pub total_assets_in_usd: f64,
     pub total_liabilities_in_usd: f64,
@@ -451,10 +451,10 @@ pub struct PositionsSummary {
 }
 
 #[derive(Debug)]
-pub struct MarginfiAccountMetrics {
+pub struct SurroundfiAccountMetrics {
     pub timestamp: i64,
     pub pubkey: Pubkey,
-    pub marginfi_group: Pubkey,
+    pub surroundfi_group: Pubkey,
     pub owner: Pubkey,
     pub total_assets_in_usd: f64,
     pub total_liabilities_in_usd: f64,
@@ -465,11 +465,11 @@ pub struct MarginfiAccountMetrics {
     pub positions: Vec<PositionsSummary>,
 }
 
-impl MarginfiAccountMetrics {
+impl SurroundfiAccountMetrics {
     pub fn new(
         timestamp: i64,
-        marginfi_account_pk: &Pubkey,
-        marginfi_account: &MarginfiAccount,
+        surroundfi_account_pk: &Pubkey,
+        surroundfi_account: &SurroundfiAccount,
         snapshot: &Snapshot,
     ) -> anyhow::Result<Self> {
         let banks = HashMap::from_iter(
@@ -500,7 +500,7 @@ impl MarginfiAccountMetrics {
                 }
             }));
 
-        let risk_engine = RiskEngine2::load(marginfi_account, &banks, &price_feeds)?;
+        let risk_engine = RiskEngine2::load(surroundfi_account, &banks, &price_feeds)?;
 
         let (total_assets_usd, total_liabilities_usd) = risk_engine.get_equity_components()?;
         let (total_assets_usd, total_liabilities_usd) = (
@@ -520,7 +520,7 @@ impl MarginfiAccountMetrics {
             total_liabilities_usd_initial.to_num::<f64>(),
         );
 
-        let positions = marginfi_account
+        let positions = surroundfi_account
             .lending_account
             .balances
             .iter()
@@ -612,9 +612,9 @@ impl MarginfiAccountMetrics {
 
         Ok(Self {
             timestamp,
-            pubkey: *marginfi_account_pk,
-            marginfi_group: marginfi_account.group,
-            owner: marginfi_account.authority,
+            pubkey: *surroundfi_account_pk,
+            surroundfi_group: surroundfi_account.group,
+            owner: surroundfi_account.authority,
             total_assets_in_usd: total_assets_usd,
             total_liabilities_in_usd: total_liabilities_usd,
             total_assets_in_usd_maintenance: total_assets_usd_maintenance,
@@ -625,8 +625,8 @@ impl MarginfiAccountMetrics {
         })
     }
 
-    pub fn to_row(&self) -> MarginfiAccountMetricsRow {
-        MarginfiAccountMetricsRow {
+    pub fn to_row(&self) -> SurroundfiAccountMetricsRow {
+        SurroundfiAccountMetricsRow {
             id: Uuid::new_v4().to_string(),
             created_at: Utc::now().format(DATE_FORMAT_STR).to_string(),
             timestamp: NaiveDateTime::from_timestamp_opt(self.timestamp, 0)
@@ -634,7 +634,7 @@ impl MarginfiAccountMetrics {
                 .format(DATE_FORMAT_STR)
                 .to_string(),
             pubkey: self.pubkey.to_string(),
-            marginfi_group: self.marginfi_group.to_string(),
+            surroundfi_group: self.surroundfi_group.to_string(),
             owner: self.owner.to_string(),
             total_assets_in_usd: self.total_assets_in_usd,
             total_liabilities_in_usd: self.total_liabilities_in_usd,

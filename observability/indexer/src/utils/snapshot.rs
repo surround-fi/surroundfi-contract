@@ -3,11 +3,11 @@ use anchor_client::anchor_lang::AccountDeserialize;
 use anchor_client::anchor_lang::Discriminator;
 use fixed::types::I80F48;
 use itertools::Itertools;
-use marginfi::constants::PYTH_PUSH_MARGINFI_SPONSORED_SHARD_ID;
-use marginfi::constants::PYTH_PUSH_PYTH_SPONSORED_SHARD_ID;
-use marginfi::{
-    prelude::MarginfiGroup,
-    state::{marginfi_account::MarginfiAccount, marginfi_group::Bank, price::*},
+use surroundfi::constants::PYTH_PUSH_SURROUNDFI_SPONSORED_SHARD_ID;
+use surroundfi::constants::PYTH_PUSH_PYTH_SPONSORED_SHARD_ID;
+use surroundfi::{
+    prelude::SurroundfiGroup,
+    state::{surroundfi_account::SurroundfiAccount, surroundfi_group::Bank, price::*},
 };
 use solana_account_decoder::UiAccountEncoding;
 use solana_account_decoder::UiDataSliceConfig;
@@ -37,8 +37,8 @@ pub struct BankAccounts {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum AccountRoutingType {
-    MarginfiGroup,
-    MarginfiAccount,
+    SurroundfiGroup,
+    SurroundfiAccount,
     Bank(Pubkey, BankUpdateRoutingType),
     PriceFeedPyth,
     PriceFeedSwitchboard,
@@ -91,9 +91,9 @@ pub struct Snapshot {
     rpc_client: Arc<RpcClient>,
     pub routing_lookup: HashMap<Pubkey, AccountRoutingType>,
 
-    pub marginfi_groups: HashMap<Pubkey, MarginfiGroup>,
+    pub surroundfi_groups: HashMap<Pubkey, SurroundfiGroup>,
     pub banks: HashMap<Pubkey, BankAccounts>,
-    pub marginfi_accounts: HashMap<Pubkey, MarginfiAccount>,
+    pub surroundfi_accounts: HashMap<Pubkey, SurroundfiAccount>,
     pub price_feeds: HashMap<Pubkey, OracleData>,
 }
 
@@ -101,10 +101,10 @@ impl Display for Snapshot {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Snapshot:\nMarginfi groups: {}\nBanks: {}\nMarginfi accounts: {}\nPriceFeeds: {}\nRouting lookup: {}",
-            self.marginfi_groups.len(),
+            "Snapshot:\nSurroundfi groups: {}\nBanks: {}\nSurroundfi accounts: {}\nPriceFeeds: {}\nRouting lookup: {}",
+            self.surroundfi_groups.len(),
             self.banks.len(),
-            self.marginfi_accounts.len(),
+            self.surroundfi_accounts.len(),
             self.price_feeds.len(),
             self.routing_lookup.len()
         )
@@ -115,8 +115,8 @@ impl Debug for Snapshot {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Snapshot:\nBanks: {:?}\nMarginfi accounts: {:?}\nPriceFeeds: {:?}\nRouting lookup: {:?}",
-            self.banks, self.marginfi_accounts, self.price_feeds, self.routing_lookup
+            "Snapshot:\nBanks: {:?}\nSurroundfi accounts: {:?}\nPriceFeeds: {:?}\nRouting lookup: {:?}",
+            self.banks, self.surroundfi_accounts, self.price_feeds, self.routing_lookup
         )
     }
 }
@@ -127,9 +127,9 @@ impl Snapshot {
             program_id,
             rpc_client,
             routing_lookup: HashMap::new(),
-            marginfi_groups: HashMap::new(),
+            surroundfi_groups: HashMap::new(),
             banks: HashMap::new(),
-            marginfi_accounts: HashMap::new(),
+            surroundfi_accounts: HashMap::new(),
             price_feeds: HashMap::new(),
         }
     }
@@ -185,7 +185,7 @@ impl Snapshot {
         Ok(())
     }
 
-    // This method assumes that all accounts of interest not owned by the marginfi program are
+    // This method assumes that all accounts of interest not owned by the surroundfi program are
     // inserted in the routing lookup table when a program account is created / received for the
     // first time. This is why this only processes program accounts.
     pub async fn create_entry(&mut self, account_pubkey: &Pubkey, account: &Account) {
@@ -244,9 +244,9 @@ impl Snapshot {
                                 PYTH_PUSH_PYTH_SPONSORED_SHARD_ID,
                                 &feed_id,
                             );
-                        let (mfi_sponsored_oracle_address, _) =
+                        let (surroundfi_sponsored_oracle_address, _) =
                             PythPushOraclePriceFeed::find_oracle_address(
-                                PYTH_PUSH_MARGINFI_SPONSORED_SHARD_ID,
+                                PYTH_PUSH_SURROUNDFI_SPONSORED_SHARD_ID,
                                 &feed_id,
                             );
 
@@ -255,7 +255,7 @@ impl Snapshot {
                             AccountRoutingType::PriceFeedPythPushOracle,
                         );
                         self.routing_lookup.insert(
-                            mfi_sponsored_oracle_address,
+                            surroundfi_sponsored_oracle_address,
                             AccountRoutingType::PriceFeedPythPushOracle,
                         );
 
@@ -296,19 +296,19 @@ impl Snapshot {
                 for (account_pubkey, account) in accounts {
                     self.udpate_entry(&account_pubkey, &account)
                 }
-            } else if discriminator == MarginfiAccount::discriminator() {
-                let marginfi_account =
-                    MarginfiAccount::try_deserialize(&mut (&account.data as &[u8])).unwrap();
+            } else if discriminator == SurroundfiAccount::discriminator() {
+                let surroundfi_account =
+                    SurroundfiAccount::try_deserialize(&mut (&account.data as &[u8])).unwrap();
                 self.routing_lookup
-                    .insert(*account_pubkey, AccountRoutingType::MarginfiAccount);
-                self.marginfi_accounts
-                    .insert(*account_pubkey, marginfi_account);
-            } else if discriminator == MarginfiGroup::discriminator() {
-                let marginfi_group =
-                    MarginfiGroup::try_deserialize(&mut (&account.data as &[u8])).unwrap();
+                    .insert(*account_pubkey, AccountRoutingType::SurroundfiAccount);
+                self.surroundfi_accounts
+                    .insert(*account_pubkey, surroundfi_account);
+            } else if discriminator == SurroundfiGroup::discriminator() {
+                let surroundfi_group =
+                    SurroundfiGroup::try_deserialize(&mut (&account.data as &[u8])).unwrap();
                 self.routing_lookup
-                    .insert(*account_pubkey, AccountRoutingType::MarginfiGroup);
-                self.marginfi_groups.insert(*account_pubkey, marginfi_group);
+                    .insert(*account_pubkey, AccountRoutingType::SurroundfiGroup);
+                self.surroundfi_groups.insert(*account_pubkey, surroundfi_group);
             }
         }
     }
@@ -348,16 +348,16 @@ impl Snapshot {
                 self.banks.get_mut(bank_pk).unwrap().bank =
                     Bank::try_deserialize(&mut (&account.data as &[u8])).unwrap();
             }
-            AccountRoutingType::MarginfiAccount => {
-                self.marginfi_accounts.insert(
+            AccountRoutingType::SurroundfiAccount => {
+                self.surroundfi_accounts.insert(
                     *account_pubkey,
-                    MarginfiAccount::try_deserialize(&mut (&account.data as &[u8])).unwrap(),
+                    SurroundfiAccount::try_deserialize(&mut (&account.data as &[u8])).unwrap(),
                 );
             }
-            AccountRoutingType::MarginfiGroup => {
-                self.marginfi_groups.insert(
+            AccountRoutingType::SurroundfiGroup => {
+                self.surroundfi_groups.insert(
                     *account_pubkey,
-                    MarginfiGroup::try_deserialize(&mut (&account.data as &[u8])).unwrap(),
+                    SurroundfiGroup::try_deserialize(&mut (&account.data as &[u8])).unwrap(),
                 );
             }
             AccountRoutingType::PriceFeedSwitchboard => {

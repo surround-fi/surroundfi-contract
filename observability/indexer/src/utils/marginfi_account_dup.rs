@@ -1,9 +1,9 @@
 use fixed::types::I80F48;
-use marginfi::state::{
-    marginfi_account::{
-        calc_value, Balance, BalanceSide, MarginfiAccount, RequirementType, RiskRequirementType,
+use surroundfi::state::{
+    surroundfi_account::{
+        calc_value, Balance, BalanceSide, SurroundfiAccount, RequirementType, RiskRequirementType,
     },
-    marginfi_group::{Bank, RiskTier},
+    surroundfi_group::{Bank, RiskTier},
     price::{OraclePriceFeedAdapter, PriceAdapter, PriceBias},
 };
 use solana_sdk::pubkey::Pubkey;
@@ -16,11 +16,11 @@ pub struct BankAccountWithPriceFeed2 {
 
 impl BankAccountWithPriceFeed2 {
     pub fn load(
-        marginfi_account: &MarginfiAccount,
+        surroundfi_account: &SurroundfiAccount,
         banks: &std::collections::HashMap<Pubkey, Bank>,
         price_feeds: &std::collections::HashMap<Pubkey, OraclePriceFeedAdapter>,
     ) -> anyhow::Result<Vec<Self>> {
-        marginfi_account
+        surroundfi_account
             .lending_account
             .balances
             .into_iter()
@@ -139,13 +139,13 @@ pub struct RiskEngine2 {
 
 impl RiskEngine2 {
     pub fn load(
-        marginfi_account: &MarginfiAccount,
+        surroundfi_account: &SurroundfiAccount,
         banks: &std::collections::HashMap<Pubkey, Bank>,
         price_feeds: &std::collections::HashMap<Pubkey, OraclePriceFeedAdapter>,
     ) -> anyhow::Result<Self> {
         Ok(Self {
             bank_accounts_with_price: BankAccountWithPriceFeed2::load(
-                marginfi_account,
+                surroundfi_account,
                 banks,
                 price_feeds,
             )?,

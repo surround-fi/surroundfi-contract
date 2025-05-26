@@ -2,7 +2,7 @@ use backoff::{future::retry, ExponentialBackoffBuilder};
 use fixed::types::I80F48;
 use fixed_macro::types::I80F48;
 use futures::future::try_join_all;
-use marginfi::state::{marginfi_account::MarginfiAccount, marginfi_group::Bank};
+use surroundfi::state::{surroundfi_account::SurroundfiAccount, surroundfi_group::Bank};
 use pyth_sdk_solana::PriceFeed;
 use serde::{Deserialize, Serialize};
 use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
@@ -126,12 +126,12 @@ pub async fn get_multiple_accounts_chunked2(
 }
 
 pub fn load_observation_account_metas(
-    marginfi_account: &MarginfiAccount,
+    surroundfi_account: &SurroundfiAccount,
     banks_map: &HashMap<Pubkey, Bank>,
     include_banks: Vec<Pubkey>,
     exclude_banks: Vec<Pubkey>,
 ) -> Vec<AccountMeta> {
-    let mut bank_pks = marginfi_account
+    let mut bank_pks = surroundfi_account
         .lending_account
         .balances
         .iter()

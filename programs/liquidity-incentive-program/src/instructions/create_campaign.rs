@@ -4,7 +4,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use marginfi::state::marginfi_group::Bank;
+use surroundfi::state::surroundfi_group::Bank;
 use std::mem::size_of;
 
 pub fn process<'info>(
@@ -37,7 +37,7 @@ pub fn process<'info>(
         max_deposits,
         remaining_capacity: max_deposits,
         max_rewards: ctx.accounts.campaign_reward_vault.amount,
-        marginfi_bank_pk: ctx.accounts.marginfi_bank.key(),
+        surroundfi_bank_pk: ctx.accounts.surroundfi_bank.key(),
         _padding: [0; 16],
     });
 
@@ -74,12 +74,12 @@ pub struct CreateCampaign<'info> {
     /// CHECK: Asserted by PDA derivation
     pub campaign_reward_vault_authority: AccountInfo<'info>,
     #[account(
-        address = marginfi_bank.load()?.mint,
+        address = surroundfi_bank.load()?.mint,
     )]
-    /// CHECK: Must match the mint of the marginfi bank,
-    /// asserted by comparing the mint of the marginfi bank
+    /// CHECK: Must match the mint of the surroundfi bank,
+    /// asserted by comparing the mint of the surroundfi bank
     pub asset_mint: InterfaceAccount<'info, Mint>,
-    pub marginfi_bank: AccountLoader<'info, Bank>,
+    pub surroundfi_bank: AccountLoader<'info, Bank>,
     #[account(mut)]
     pub admin: Signer<'info>,
     /// CHECK: Asserted by token check

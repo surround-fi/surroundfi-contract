@@ -1,5 +1,5 @@
 use crate::{
-    constants::{DEPOSIT_MFI_AUTH_SIGNER_SEED, MARGINFI_ACCOUNT_SEED},
+    constants::{DEPOSIT_MFI_AUTH_SIGNER_SEED, SURROUNDFI_ACCOUNT_SEED},
     errors::LIPError,
     state::{Campaign, Deposit},
 };
@@ -8,7 +8,7 @@ use anchor_spl::{
     token_2022::{close_account, CloseAccount},
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
-use marginfi::{program::Marginfi, state::marginfi_group::Bank};
+use surroundfi::{program::Surroundfi, state::surroundfi_group::Bank};
 use std::mem::size_of;
 
 /// Creates a new deposit in an active liquidity incentive campaign (LIP).
@@ -57,42 +57,42 @@ pub fn process<'info>(
         &[ctx.bumps.mfi_pda_signer],
     ];
 
-    marginfi::cpi::marginfi_account_initialize(CpiContext::new_with_signer(
-        ctx.accounts.marginfi_program.to_account_info(),
-        marginfi::cpi::accounts::MarginfiAccountInitialize {
-            marginfi_group: ctx.accounts.marginfi_group.to_account_info(),
+    surroundfi::cpi::surroundfi_account_initialize(CpiContext::new_with_signer(
+        ctx.accounts.surroundfi_program.to_account_info(),
+        surroundfi::cpi::accounts::SurroundfiAccountInitialize {
+            surroundfi_group: ctx.accounts.surroundfi_group.to_account_info(),
             authority: ctx.accounts.mfi_pda_signer.to_account_info(),
-            marginfi_account: ctx.accounts.marginfi_account.to_account_info(),
+            surroundfi_account: ctx.accounts.surroundfi_account.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
             fee_payer: ctx.accounts.signer.to_account_info(),
         },
         &[
             mfi_signer_seeds,
             &[
-                MARGINFI_ACCOUNT_SEED.as_bytes(),
+                SURROUNDFI_ACCOUNT_SEED.as_bytes(),
                 &ctx.accounts.deposit.key().to_bytes(),
-                &[ctx.bumps.marginfi_account],
+                &[ctx.bumps.surroundfi_account],
             ],
         ],
     ))?;
 
     let signer_seeds = &[mfi_signer_seeds];
     let mut cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.marginfi_program.to_account_info(),
-        marginfi::cpi::accounts::LendingAccountDeposit {
-            group: ctx.accounts.marginfi_group.to_account_info(),
-            marginfi_account: ctx.accounts.marginfi_account.to_account_info(),
+        ctx.accounts.surroundfi_program.to_account_info(),
+        surroundfi::cpi::accounts::LendingAccountDeposit {
+            group: ctx.accounts.surroundfi_group.to_account_info(),
+            surroundfi_account: ctx.accounts.surroundfi_account.to_account_info(),
             authority: ctx.accounts.mfi_pda_signer.to_account_info(),
-            bank: ctx.accounts.marginfi_bank.to_account_info(),
+            bank: ctx.accounts.surroundfi_bank.to_account_info(),
             signer_token_account: ctx.accounts.temp_token_account.to_account_info(),
-            liquidity_vault: ctx.accounts.marginfi_bank_vault.to_account_info(),
+            liquidity_vault: ctx.accounts.surroundfi_bank_vault.to_account_info(),
             token_program: ctx.accounts.token_program.to_account_info(),
         },
         signer_seeds,
     );
     cpi_ctx.remaining_accounts = ctx.remaining_accounts.to_vec();
 
-    if marginfi::utils::nonzero_fee(
+    if surroundfi::utils::nonzero_fee(
         ctx.accounts.asset_mint.to_account_info(),
         Clock::get()?.epoch,
     )? {
@@ -100,7 +100,7 @@ pub fn process<'info>(
         return Err(ProgramError::InvalidAccountData.into());
     }
 
-    marginfi::cpi::lending_account_deposit(cpi_ctx, amount, None)?;
+    surroundfi::cpi::lending_account_deposit(cpi_ctx, amount, None)?;
 
     close_account(CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
@@ -167,39 +167,39 @@ pub struct CreateDeposit<'info> {
     )]
     pub temp_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    #[account(address = marginfi_bank.load()?.mint)]
+    #[account(address = surroundfi_bank.load()?.mint)]
     pub asset_mint: Box<InterfaceAccount<'info, Mint>>,
 
     /// CHECK: Asserted by mfi cpi call
-    /// marginfi_bank is tied to a specific marginfi_group
-    pub marginfi_group: AccountInfo<'info>,
+    /// surroundfi_bank is tied to a specific surroundfi_group
+    pub surroundfi_group: AccountInfo<'info>,
 
     #[account(
         mut,
-        address = campaign.marginfi_bank_pk,
+        address = campaign.surroundfi_bank_pk,
     )]
     /// CHECK: Asserted by stored address
-    pub marginfi_bank: AccountLoader<'info, Bank>,
+    pub surroundfi_bank: AccountLoader<'info, Bank>,
 
     /// CHECK: Asserted by CPI call
     #[account(
         mut,
         seeds = [
-            MARGINFI_ACCOUNT_SEED.as_bytes(),
+            SURROUNDFI_ACCOUNT_SEED.as_bytes(),
             deposit.key().as_ref(),
         ],
         bump,
     )]
-    pub marginfi_account: AccountInfo<'info>,
+    pub surroundfi_account: AccountInfo<'info>,
 
     #[account(mut)]
     /// CHECK: Asserted by CPI call,
-    /// marginfi_bank_vault is tied to a specific marginfi_bank,
+    /// surroundfi_bank_vault is tied to a specific surroundfi_bank,
     /// passing in an incorrect vault will fail the CPI call
-    pub marginfi_bank_vault: AccountInfo<'info>,
+    pub surroundfi_bank_vault: AccountInfo<'info>,
 
     /// CHECK: Asserted by CPI call
-    pub marginfi_program: Program<'info, Marginfi>,
+    pub surroundfi_program: Program<'info, Surroundfi>,
     pub token_program: Interface<'info, TokenInterface>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,

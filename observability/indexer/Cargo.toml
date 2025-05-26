@@ -1,14 +1,14 @@
 [package]
-name = "marginfi-v2-indexer"
+name = "surroundfi-indexer"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "mfi-index"
+name = "sfi-index"
 path = "src/bin/main.rs"
 
 [features]
-mainnet-beta = ["marginfi/mainnet-beta"]
+mainnet-beta = ["surroundfi/mainnet-beta"]
 
 [dependencies]
 solana-client = { workspace = true }
@@ -22,7 +22,7 @@ anchor-client = { workspace = true }
 pyth-sdk-solana = { workspace = true }
 spl-token = { workspace = true }
 
-marginfi = { path = "../../programs/marginfi", features = [
+surroundfi = { path = "../../programs/surroundfi", features = [
     "no-entrypoint",
     "client",
 ] }

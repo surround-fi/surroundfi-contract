@@ -6,9 +6,9 @@ use anyhow::Result;
 use fixed::types::I80F48;
 use futures::future::join_all;
 use lazy_static::lazy_static;
-use marginfi::{
+use surroundfi::{
     constants::{EMISSIONS_FLAG_BORROW_ACTIVE, EMISSIONS_FLAG_LENDING_ACTIVE, SECONDS_PER_YEAR},
-    state::marginfi_group::{Bank, ComputedInterestRates, MarginfiGroup},
+    state::surroundfi_group::{Bank, ComputedInterestRates, SurroundfiGroup},
 };
 use reqwest::header::CONTENT_TYPE;
 use s3::{creds::Credentials, Bucket, Region};
@@ -43,8 +43,8 @@ lazy_static! {
 
 const BIRDEYE_API: &str = "https://public-api.birdeye.so";
 const CHAIN: &str = "solana";
-const PROJECT: &str = "marginfi";
-const S3_BUCKET: &str = "marignfi-pools-snapshot";
+const PROJECT: &str = "surroundfi";
+const S3_BUCKET: &str = "surroundfi-pools-snapshot";
 const AWS_S3_OBJ_PATH: &str = "snapshot.json";
 
 #[tokio::main]
@@ -56,11 +56,11 @@ async fn main() -> Result<()> {
         Rc::new(dummy_key),
     );
 
-    let program = client.program(marginfi::id()).unwrap();
+    let program = client.program(surroundfi::id()).unwrap();
     let rpc = program.rpc();
 
     let banks = program.accounts::<Bank>(vec![])?;
-    let groups = program.accounts::<MarginfiGroup>(vec![])?;
+    let groups = program.accounts::<SurroundfiGroup>(vec![])?;
     let groups_map = groups
         .iter()
         .map(|(pk, group)| (*pk, group))
@@ -134,7 +134,7 @@ impl DefiLammaPoolInfo {
         bank: &Bank,
         bank_pk: &Pubkey,
         rpc_client: &RpcClient,
-        group: &MarginfiGroup,
+        group: &SurroundfiGroup,
     ) -> Result<Self> {
         let ltv = I80F48::ONE / I80F48::from(bank.config.liability_weight_init);
         let reward_tokens = if bank.emissions_mint != Pubkey::default() {

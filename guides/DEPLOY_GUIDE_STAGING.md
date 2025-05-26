@@ -13,7 +13,7 @@ Staging is different from mainnet only in that it uses a different key. Ensure t
 ### With Anchor
 
 * Note: this rarely works, the program is probably too chonky.
-* Build with `anchor build -p marginfi -- --no-default-features --features staging`
+* Build with `a --features staging`
 * If this is your first time deploying (to a new key), with `anchor build -p marginfi -- --no-default-features --features staging`
 * Ensure anchor.toml is configured like this: 
 ```

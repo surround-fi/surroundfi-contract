@@ -15,8 +15,8 @@ no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
-devnet = ["marginfi/devnet"]
-mainnet-beta = ["marginfi/mainnet-beta"]
+devnet = ["surroundfi/devnet"]
+mainnet-beta = ["surroundfi/mainnet-beta"]
 test = []
 test-bpf = []
 
@@ -27,8 +27,8 @@ anchor-spl = { workspace = true }
 cfg-if = "1.0.0"
 fixed = "1.12.0"
 
-[dependencies.marginfi]
-path = "../marginfi"
+[dependencies.surroundfi]
+path = "../surroundfi"
 features = ["cpi"]
 
 [dev-dependencies]

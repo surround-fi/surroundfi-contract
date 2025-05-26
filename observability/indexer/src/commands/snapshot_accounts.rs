@@ -1,6 +1,5 @@
-use crate::utils::convert_account;
 use crate::utils::crossbar::{CrossbarCache, SwbPullFeedMeta};
-use crate::utils::metrics::{LendingPoolBankMetrics, MarginfiAccountMetrics, MarginfiGroupMetrics};
+use crate::utils::metrics::{LendingPoolBankMetrics, SurroundfiAccountMetrics, SurroundfiGroupMetrics};
 use crate::utils::snapshot::{AccountRoutingType, BankUpdateRoutingType};
 use crate::utils::snapshot::{OracleData, Snapshot};
 use crate::utils::swb_pull::overwrite_price_from_sim;
@@ -217,8 +216,8 @@ pub async fn snapshot_accounts(config: SnapshotAccountsConfig) -> Result<()> {
             .routing_lookup
             .iter()
             .filter(|(_, routing_type)| match routing_type {
-                AccountRoutingType::MarginfiGroup => false,
-                AccountRoutingType::MarginfiAccount => false,
+                AccountRoutingType::SurroundfiGroup => false,
+                AccountRoutingType::SurroundfiAccount => false,
                 AccountRoutingType::Bank(_, bank_update_routing_type) => {
                     !matches!(bank_update_routing_type, BankUpdateRoutingType::State)
                 }
@@ -505,8 +504,8 @@ pub async fn update_account_map(ctx: Arc<Context>) {
                     .routing_lookup
                     .iter()
                     .filter(|(_, routing_type)| match routing_type {
-                        AccountRoutingType::MarginfiGroup => false,
-                        AccountRoutingType::MarginfiAccount => false,
+                        AccountRoutingType::SurroundfiGroup => false,
+                        AccountRoutingType::SurroundfiAccount => false,
                         AccountRoutingType::Bank(_, bank_update_routing_type) => {
                             !matches!(bank_update_routing_type, BankUpdateRoutingType::State)
                         }
@@ -548,15 +547,15 @@ pub async fn push_transactions_to_bigquery(ctx: Arc<Context>) {
         let timestamp = ctx.timestamp.load(Ordering::Relaxed);
 
         let all_group_metrics = snapshot
-            .marginfi_groups
+            .surroundfi_groups
             .par_iter()
-            .map(|(marginfi_group_pk, marginfi_group)| {
+            .map(|(surroundfi_group_pk, surroundfi_group)| {
                 (
-                    marginfi_group_pk,
-                    MarginfiGroupMetrics::new(
+                    surroundfi_group_pk,
+                    SurroundfiGroupMetrics::new(
                         timestamp,
-                        marginfi_group_pk,
-                        marginfi_group,
+                        surroundfi_group_pk,
+                        surroundfi_group,
                         &snapshot,
                     ),
                 )
@@ -572,16 +571,16 @@ pub async fn push_transactions_to_bigquery(ctx: Arc<Context>) {
                 )
             })
             .collect::<Vec<_>>();
-        let all_marginfi_account_metrics = snapshot
-            .marginfi_accounts
+        let all_surroundfi_account_metrics = snapshot
+            .surroundfi_accounts
             .par_iter()
-            .map(|(marginfi_account_pk, marginfi_account)| {
+            .map(|(surroundfi_account_pk, surroundfi_account)| {
                 (
-                    marginfi_account_pk,
-                    MarginfiAccountMetrics::new(
+                    surroundfi_account_pk,
+                    SurroundfiAccountMetrics::new(
                         timestamp,
-                        marginfi_account_pk,
-                        marginfi_account,
+                        surroundfi_account_pk,
+                        surroundfi_account,
                         &snapshot,
                     ),
                 )
@@ -598,7 +597,7 @@ pub async fn push_transactions_to_bigquery(ctx: Arc<Context>) {
             .iter()
             .for_each(|(id, metrics_result)| match metrics_result {
                 Ok(metrics) => insert_request.add_row(None, metrics.to_row()).unwrap(),
-                Err(err) => warn!("Failed to create metrics for marginfi group {id}: {err}"),
+                Err(err) => warn!("Failed to create metrics for surroundfi group {id}: {err}"),
             });
         let result = write_to_bq(
             &bq_client,
@@ -611,7 +610,7 @@ pub async fn push_transactions_to_bigquery(ctx: Arc<Context>) {
         .await;
         if let Err(error) = result {
             warn!(
-                "Failed to write marginfi group metrics to bigquery: {}",
+                "Failed to write surroundfi group metrics to bigquery: {}",
                 error
             );
         }
@@ -649,7 +648,7 @@ pub async fn push_transactions_to_bigquery(ctx: Arc<Context>) {
 
         let start = Instant::now();
 
-        let insert_requests: Vec<TableDataInsertAllRequest> = all_marginfi_account_metrics
+        let insert_requests: Vec<TableDataInsertAllRequest> = all_surroundfi_account_metrics
             .chunks(7000)
             .map(|metrics_results_chunk| {
                 let mut insert_request: TableDataInsertAllRequest =
@@ -659,7 +658,7 @@ pub async fn push_transactions_to_bigquery(ctx: Arc<Context>) {
                     |(id, metrics_result)| match metrics_result {
                         Ok(metrics) => insert_request.add_row(None, metrics.to_row()).unwrap(),
                         Err(err) => {
-                            warn!("Failed to create metrics for marginfi account {id}: {err}")
+                            warn!("Failed to create metrics for surroundfi account {id}: {err}")
                         }
                     },
                 );
@@ -681,7 +680,7 @@ pub async fn push_transactions_to_bigquery(ctx: Arc<Context>) {
         for result in results {
             if let Err(error) = result {
                 warn!(
-                    "Failed to write marginfi account metrics to bigquery: {}",
+                    "Failed to write surroundfi account metrics to bigquery: {}",
                     error
                 );
             }

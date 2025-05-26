@@ -1,6 +1,6 @@
 use fixed::types::I80F48;
-use marginfi::constants::EXP_10_I80F48;
-use marginfi::state::price::SwitchboardPullPriceFeed;
+use surroundfi::constants::EXP_10_I80F48;
+use surroundfi::state::price::SwitchboardPullPriceFeed;
 use solana_sdk::account_info::AccountInfo;
 use switchboard_on_demand::PullFeedAccountData;
 

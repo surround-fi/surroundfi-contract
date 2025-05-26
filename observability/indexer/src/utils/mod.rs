@@ -3,7 +3,7 @@ use solana_sdk::{account::Account, pubkey::Pubkey};
 pub mod big_query;
 pub mod crossbar;
 pub mod errors;
-pub mod marginfi_account_dup;
+pub mod surroundfi_account_dup;
 pub mod metrics;
 pub mod protos;
 pub mod snapshot;

@@ -6,9 +6,9 @@ use std::{
 };
 
 use log::{error, info, warn};
-use marginfi::{
-    constants::{PYTH_PUSH_MARGINFI_SPONSORED_SHARD_ID, PYTH_PUSH_PYTH_SPONSORED_SHARD_ID},
-    state::{marginfi_group::Bank, price::OracleSetup},
+use surroundfi::{
+    constants::{PYTH_PUSH_SURROUNDFI_SPONSORED_SHARD_ID, PYTH_PUSH_PYTH_SPONSORED_SHARD_ID},
+    state::{surroundfi_group::Bank, price::OracleSetup},
 };
 use pagerduty_rs::{
     eventsv2sync::EventsV2,
@@ -29,15 +29,15 @@ use switchboard_solana::{AggregatorAccountData, AnchorDeserialize};
 use time::OffsetDateTime;
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct MarginfiAlerterConfig {
+pub struct SurroundfiAlerterConfig {
     rpc_url: String,
     pd_integration_key: String,
-    marginfi_program_id: String,
-    marginfi_groups: Vec<MarginfiGroupAlertingConfig>,
+    surroundfi_program_id: String,
+    surroundfi_groups: Vec<SurroundfiGroupAlertingConfig>,
     balance_alert: Vec<BalanceAlertingConfig>,
 }
 
-impl MarginfiAlerterConfig {
+impl SurroundfiAlerterConfig {
     pub fn load_from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let file = std::fs::File::open(path)?;
         let reader = std::io::BufReader::new(file);
@@ -48,7 +48,7 @@ impl MarginfiAlerterConfig {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct MarginfiGroupAlertingConfig {
+struct SurroundfiGroupAlertingConfig {
     address: String,
     max_age_secs: i64,
 }
@@ -61,31 +61,31 @@ struct BalanceAlertingConfig {
 }
 
 #[derive(Clone, Debug, StructOpt)]
-pub struct MarginfiAlerter {
+pub struct SurroundfiAlerter {
     config_path: String,
 }
 
 struct AlertingContext {
     rpc_client: RpcClient,
-    config: MarginfiAlerterConfig,
-    group_config_map: HashMap<Pubkey, MarginfiGroupAlertingConfig>,
+    config: SurroundfiAlerterConfig,
+    group_config_map: HashMap<Pubkey, SurroundfiGroupAlertingConfig>,
     pd: EventsV2,
 }
 
 fn main() {
     env_logger::init();
-    let args = MarginfiAlerter::from_args();
-    let config = MarginfiAlerterConfig::load_from_file(&args.config_path).unwrap();
+    let args = SurroundfiAlerter::from_args();
+    let config = SurroundfiAlerterConfig::load_from_file(&args.config_path).unwrap();
     let rpc_client = RpcClient::new(config.rpc_url.clone());
 
     println!(
-        "Starting marginfi alerter, evaluating {} groups and {} balance alerts",
-        config.marginfi_groups.len(),
+        "Starting surroundfi alerter, evaluating {} groups and {} balance alerts",
+        config.surroundfi_groups.len(),
         config.balance_alert.len()
     );
 
     let group_config_map = config
-        .marginfi_groups
+        .surroundfi_groups
         .iter()
         .map(|group| (Pubkey::from_str(&group.address).unwrap(), group.clone()))
         .collect();
@@ -102,8 +102,8 @@ fn main() {
             clear_error_alert(&context).unwrap();
         }
         Err(e) => {
-            error!("Error running marginfi alerter: {:?}", e);
-            send_error_alert(&context, &format!("Error running marginfi alerter: {}", e)).unwrap();
+            error!("Error running surroundfi alerter: {:?}", e);
+            send_error_alert(&context, &format!("Error running surroundfi alerter: {}", e)).unwrap();
             eprintln!("{:#?}", e);
             std::process::exit(1);
         }
@@ -111,7 +111,7 @@ fn main() {
 }
 
 fn check_all(context: &AlertingContext) -> anyhow::Result<()> {
-    check_marginfi_groups(context)?;
+    check_surroundfi_groups(context)?;
     check_balance_alert(context)?;
     Ok(())
 }
@@ -120,7 +120,7 @@ fn send_error_alert(context: &AlertingContext, message: &str) -> anyhow::Result<
     let event = Event::AlertTrigger::<String>(AlertTrigger {
         payload: AlertTriggerPayload {
             summary: message.to_string(),
-            source: "marginfi-alerter".to_string(),
+            source: "surroundfi-alerter".to_string(),
             severity: pagerduty_rs::types::Severity::Critical,
             custom_details: None,
             component: None,
@@ -128,7 +128,7 @@ fn send_error_alert(context: &AlertingContext, message: &str) -> anyhow::Result<
             class: None,
             timestamp: None,
         },
-        dedup_key: Some("marginfi-alerter-error".to_string()),
+        dedup_key: Some("surroundfi-alerter-error".to_string()),
         images: None,
         links: None,
         client: None,
@@ -142,7 +142,7 @@ fn send_error_alert(context: &AlertingContext, message: &str) -> anyhow::Result<
 
 fn clear_error_alert(context: &AlertingContext) -> anyhow::Result<()> {
     let event = Event::AlertResolve::<String>(AlertResolve {
-        dedup_key: "marginfi-alerter-error".to_string(),
+        dedup_key: "surroundfi-alerter-error".to_string(),
     });
 
     context.pd.event(event).map_err(|e| anyhow::anyhow!(e))?;
@@ -150,9 +150,9 @@ fn clear_error_alert(context: &AlertingContext) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn check_marginfi_groups(context: &AlertingContext) -> anyhow::Result<()> {
-    for group in context.config.marginfi_groups.iter() {
-        check_marginfi_group(context, group)?;
+fn check_surroundfi_groups(context: &AlertingContext) -> anyhow::Result<()> {
+    for group in context.config.surroundfi_groups.iter() {
+        check_surroundfi_group(context, group)?;
     }
 
     Ok(())
@@ -191,14 +191,14 @@ fn check_balance(
     Ok(())
 }
 
-fn check_marginfi_group(
+fn check_surroundfi_group(
     context: &AlertingContext,
-    group: &MarginfiGroupAlertingConfig,
+    group: &SurroundfiGroupAlertingConfig,
 ) -> anyhow::Result<()> {
-    let marginfi_program_id = Pubkey::from_str(&context.config.marginfi_program_id)?;
+    let surroundfi_program_id = Pubkey::from_str(&context.config.surroundfi_program_id)?;
     let group_address = Pubkey::from_str(&group.address)?;
     let bank_accounts = context.rpc_client.get_program_accounts_with_config(
-        &marginfi_program_id,
+        &surroundfi_program_id,
         RpcProgramAccountsConfig {
             filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new_raw_bytes(
                 8 + size_of::<Pubkey>() + size_of::<u8>(),
@@ -309,19 +309,19 @@ fn check_pyth_push_oracle(
 ) -> anyhow::Result<()> {
     let oracle_address = bank.config.oracle_keys.first().unwrap();
     let oracle_account = {
-        let (marginfi_sponsored_oracle_address, _) =
-            marginfi::state::price::PythPushOraclePriceFeed::find_oracle_address(
-                PYTH_PUSH_MARGINFI_SPONSORED_SHARD_ID,
+        let (surroundfi_sponsored_oracle_address, _) =
+            surroundfi::state::price::PythPushOraclePriceFeed::find_oracle_address(
+                PYTH_PUSH_SURROUNDFI_SPONSORED_SHARD_ID,
                 oracle_address.as_ref().try_into().unwrap(),
             );
         let (pyth_sponsered_oracle_address, _) =
-            marginfi::state::price::PythPushOraclePriceFeed::find_oracle_address(
+            surroundfi::state::price::PythPushOraclePriceFeed::find_oracle_address(
                 PYTH_PUSH_PYTH_SPONSORED_SHARD_ID,
                 oracle_address.as_ref().try_into().unwrap(),
             );
 
         let accounts = context.rpc_client.get_multiple_accounts(&[
-            marginfi_sponsored_oracle_address,
+            surroundfi_sponsored_oracle_address,
             pyth_sponsered_oracle_address,
         ])?;
 
@@ -426,7 +426,7 @@ fn send_balance_alert(
                         balance_ui,
                         balance_config.min_balance
                     ),
-                    source: "marginfi-alerter".to_string(),
+                    source: "surroundfi-alerter".to_string(),
                     timestamp: Some(OffsetDateTime::now_utc()),
                     component: None,
                     group: None,
@@ -474,7 +474,7 @@ fn send_stale_oracle_alert(
                         "Oracle for bank {} is stale by {} seconds",
                         address, oralce_age_secs
                     ),
-                    source: "marginfi-alerter".to_string(),
+                    source: "surroundfi-alerter".to_string(),
                     timestamp: Some(OffsetDateTime::now_utc()),
                     component: None,
                     group: None,
